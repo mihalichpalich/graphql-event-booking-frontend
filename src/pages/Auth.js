@@ -1,12 +1,15 @@
-import React, {useState} from "react";
+import React, {useState, useContext} from "react";
 
 import './Auth.css';
 import axios from '../core/axios';
+import {AuthContext} from '../context/auth-context';
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const {login} = useContext(AuthContext);
     const emailEl = React.createRef();
     const passwordEl = React.createRef();
+
 
     const submitHandler = e => {
         e.preventDefault();
@@ -54,7 +57,9 @@ const AuthPage = () => {
                 return res.data
             })
             .then(resData => {
-                console.log(resData)
+                if (resData.data.login.token) {
+                    login(resData.data.login.token, resData.data.login.userId, resData.data.login.tokenExpiration)
+                }
             })
             .catch(err => {
                 console.log(err)
