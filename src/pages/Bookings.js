@@ -3,6 +3,7 @@ import axios from "../core/axios";
 
 import {AuthContext} from "../context/auth-context";
 import Spinner from '../components/Spinner/Spinner';
+import BookingList from '../components/Bookings/BookingList/BookingList';
 
 const BookingsPage = () => {
     const {token} = useContext(AuthContext);
@@ -49,20 +50,49 @@ const BookingsPage = () => {
             })
     };
 
+    const deleteBookingHandler = bookingId => {
+        setIsLoading(true);
+
+        const requestBody = {
+            query: `
+                mutation {
+                    cancelBooking(bookingId: "${bookingId}")
+                    {
+                        _id
+                        title
+                    }
+                }
+            `
+        };
+
+        axios.post('/graphql', requestBody, {
+            headers: {Authorization: "Bearer " + token}
+        })
+            .then(res => {
+                if (res.status !== 200 && res.status !== 201) {
+                    throw new Error('Failed!')
+                }
+
+                return res.data
+            })
+            .then(() => {
+                setBookings(bookings.filter(booking => booking._id !== bookingId));
+                setIsLoading(false)
+            })
+            .catch(err => {
+                console.log(err);
+                setIsLoading(false)
+            })
+    };
+
     useEffect(fetchBookings, []);
 
     return (
         <>
-            {isLoading ? <Spinner/> : (
-                <ul>
-                    {bookings.map(
-                        booking => (
-                            <li key={booking._id}>
-                                {booking.event.title} - {new Date(booking.createdAt).toLocaleDateString()}
-                            </li>
-                        )
-                    )}
-                </ul>
+            {isLoading ? (
+                <Spinner/>
+            ) : (
+                <BookingList bookings={bookings} onDelete={deleteBookingHandler}/>
             )}
         </>
     )
