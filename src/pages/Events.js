@@ -18,6 +18,7 @@ const EventsPage = () => {
     const [creating, setCreating] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    let isActive = true;
 
     const startCreateEventHandler = () => {
         setCreating(true);
@@ -64,7 +65,7 @@ const EventsPage = () => {
             `
         };
 
-        axios.post('http://localhost:3001/graphql', requestBody, {
+        axios.post('/graphql', requestBody, {
             headers: {Authorization: "Bearer " + token}
         })
             .then(res => {
@@ -88,7 +89,41 @@ const EventsPage = () => {
     };
 
     const bookEventHandler = () => {
+        if (!token) {
+            setSelectedEvent(null);
+            return
+        }
 
+        const requestBody = {
+            query: `
+                mutation {
+                    bookEvent(eventId: "${selectedEvent._id}")
+                    {
+                        _id
+                        createdAt
+                        updatedAt
+                    }
+                }
+            `
+        };
+
+        axios.post('/graphql', requestBody, {
+            headers: {Authorization: "Bearer " + token}
+        })
+            .then(res => {
+                if (res.status !== 200 && res.status !== 201) {
+                    throw new Error('Failed!')
+                }
+
+                return res.data
+            })
+            .then(resData => {
+                console.log(resData);
+                setSelectedEvent(null)
+            })
+            .catch(err => {
+                console.log(err)
+            })
     };
 
     const fetchEvents = () => {
@@ -111,7 +146,7 @@ const EventsPage = () => {
             `
         };
 
-        axios.post('http://localhost:3001/graphql', requestBody)
+        axios.post('/graphql', requestBody)
             .then(res => {
                 if (res.status !== 200 && res.status !== 201) {
                     throw new Error('Failed!')
@@ -121,16 +156,18 @@ const EventsPage = () => {
             })
             .then(resData => {
                 const events = resData.data.events;
-                setEvents(events);
-                setIsLoading(false);
+                if (isActive) {
+                    setEvents(events);
+                    setIsLoading(false);
+                }
             })
             .catch(err => {
                 console.log(err);
-                setIsLoading(false);
+                if (isActive) {
+                    setIsLoading(false);
+                }
             })
     };
-
-    useEffect(fetchEvents, []);
 
     const showDetailHandler = eventId => {
         setSelectedEvent(() => {
@@ -138,6 +175,13 @@ const EventsPage = () => {
             return selectedEvent
         })
     };
+
+    useEffect(fetchEvents, []);
+    useEffect(() => {
+        return () => {
+            isActive = false
+        }
+    }, [events]);
 
     return (
         <>
@@ -186,7 +230,7 @@ const EventsPage = () => {
                     canConfirm
                     onCancel={modalCancelHandler}
                     onConfirm={bookEventHandler}
-                    confirmText="Book"
+                    confirmText={token ? 'Book' : 'Confirm'}
                 >
                     <h1>{selectedEvent.title}</h1>
                     <h2>${selectedEvent.price} - {new Date(selectedEvent.date).toLocaleDateString('ru-RU')}</h2>

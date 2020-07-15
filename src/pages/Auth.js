@@ -48,7 +48,7 @@ const AuthPage = () => {
             };
         }
 
-        axios.post('http://localhost:3001/graphql', requestBody)
+        axios.post('/graphql', requestBody)
             .then(res => {
                 if (res.status !== 200 && res.status !== 201) {
                     throw new Error('Failed!')
