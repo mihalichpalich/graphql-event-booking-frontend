@@ -37,7 +37,7 @@ const EventsPage = () => {
             if (key !== "price" && event[key].trim().length === 0) {
                 return
             }
-            if (key === "price" && event["price"] <= 0) {
+            if (key === "price" && event["price"] < 0) {
                 return;
             }
         }

@@ -3,8 +3,8 @@ import {Bar as BarChart} from 'react-chartjs';
 
 const BOOKINGS_CHART_BUCKETS = {
     'Free': {
-        min: 0,
-        max: 0,
+        min: -0.01,
+        max: 0.01,
         color: 'gray'
     },
     '$': {
